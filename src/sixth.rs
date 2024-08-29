@@ -1,0 +1,17 @@
+use std::{marker::PhantomData, ptr::NonNull};
+
+pub struct LinkedList<T> {
+    front: Link<T>,
+    back: Link<T>,
+    len: usize,
+
+    _pd: PhantomData<T>,
+}
+
+type Link<T> = Option<NonNull<Node<T>>>;
+
+struct Node<T> {
+    front: Link<T>,
+    back: Link<T>,
+    elem: T,
+}
