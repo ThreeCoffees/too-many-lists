@@ -1,3 +1,5 @@
+use std::{marker::PhantomData};
+
 use super::{Link, LinkedList};
 
 pub struct CursorMut<'a, T> {
@@ -81,15 +83,94 @@ impl<'a, T> CursorMut<'a, T> {
         }
     }
 
-    // Split and Splice
-    /*pub fn split_before(&mut self) -> LinkedList<T> {
+    // Split
+    pub fn split_before(&mut self) -> LinkedList<T> {
         if let Some(cur) = self.cur {
             unsafe {
+                // Current state
                 let old_len = self.list.len;
-                let old_
+                let old_idx = self.index.unwrap();
+                let prev = (*cur.as_ptr()).front;
 
+                // What self will become
+                let new_len = old_len - old_idx;
+                let new_front = self.cur;
+                let new_back = self.list.back;
+                let new_idx = Some(0);
+
+                // What the output will become
+                let output_len = old_len - new_len;
+                let output_front = self.list.front;
+                let output_back = prev;
+
+                // Break the links between cur and prev
+                if let Some(prev) = prev {
+                    (*cur.as_ptr()).front = None;
+                    (*prev.as_ptr()).back = None;
+                }
+
+                // Produce the results
+                self.list.len = new_len;
+                self.list.front = new_front;
+                self.list.back = new_back;
+                self.index = new_idx;
+
+                LinkedList {
+                    front: output_front,
+                    back: output_back,
+                    len: output_len,
+                    _pd: PhantomData,
+                }
             }
+        } else {
+            std::mem::replace(self.list, LinkedList::new())
         }
-    }*/
+    }
+
+    // TODO
+    pub fn split_after(&mut self) -> LinkedList<T> {
+        if let Some(cur) = self.cur {
+            unsafe {
+                // Current state
+                let old_len = self.list.len;
+                let old_idx = self.index.unwrap();
+                let prev = (*cur.as_ptr()).front;
+
+                // What self will become
+                let new_len = old_len - old_idx;
+                let new_front = self.cur;
+                let new_back = self.list.back;
+                let new_idx = Some(0);
+
+                // What the output will become
+                let output_len = old_len - new_len;
+                let output_front = self.list.front;
+                let output_back = prev;
+
+                // Break the links between cur and prev
+                if let Some(prev) = prev {
+                    (*cur.as_ptr()).front = None;
+                    (*prev.as_ptr()).back = None;
+                }
+
+                // Produce the results
+                self.list.len = new_len;
+                self.list.front = new_front;
+                self.list.back = new_back;
+                self.index = new_idx;
+
+                LinkedList {
+                    front: output_front,
+                    back: output_back,
+                    len: output_len,
+                    _pd: PhantomData,
+                }
+            }
+        } else {
+            std::mem::replace(self.list, LinkedList::new())
+        }
+    }
+
+
 
 }
