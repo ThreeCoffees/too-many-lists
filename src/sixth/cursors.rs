@@ -36,12 +36,12 @@ impl<'a, T> CursorMut<'a, T> {
             }
         } else if !self.list.is_empty() {
             self.cur = self.list.front;
-            self.index = Some(0);
+            self.index = Some(0)
         } else {
-            
+
         }
     }
-    
+
     pub fn move_prev(&mut self) {
         if let Some(cur) = self.cur {
             unsafe {
@@ -54,9 +54,9 @@ impl<'a, T> CursorMut<'a, T> {
             }
         } else if !self.list.is_empty() {
             self.cur = self.list.back;
-            self.index = Some(self.list.len - 1);
+            self.index = Some(self.list.len - 1)
         } else {
-            
+
         }
     }
 
@@ -69,17 +69,25 @@ impl<'a, T> CursorMut<'a, T> {
 
     pub fn peek_next(&mut self) -> Option<&mut T> {
         unsafe {
-            self.cur
-                .and_then(|node| (*node.as_ptr()).back)
-                .map(|node| &mut (*node.as_ptr()).elem)
+            let next = if let Some(cur) = self.cur {
+                (*cur.as_ptr()).back
+            } else {
+                self.list.front
+            };
+
+            next.map(|node| &mut (*node.as_ptr()).elem)
         }
     }
 
     pub fn peek_prev(&mut self) -> Option<&mut T> {
         unsafe {
-            self.cur
-                .and_then(|node| (*node.as_ptr()).front)
-                .map(|node| &mut (*node.as_ptr()).elem)
+            let prev = if let Some(cur) = self.cur {
+                (*cur.as_ptr()).front
+            } else {
+                self.list.back
+            };
+
+            prev.map(|node| &mut (*node.as_ptr()).elem)
         }
     }
 

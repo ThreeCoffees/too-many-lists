@@ -342,6 +342,8 @@ fn test_cursor_mut_insert() {
        check_links(&m);
        assert_eq!(m.iter().cloned().collect::<Vec<_>>(), &[1, 8, 2, 3, 4, 5, 6]);
        */
+    let mut m: LinkedList<u32> = LinkedList::new();
+    m.extend([1, 8, 2, 3, 4, 5, 6]);
 
     let mut cursor = m.cursor_mut();
     cursor.move_next();
@@ -376,7 +378,11 @@ fn test_cursor_mut_insert() {
     assert_eq!(m.iter().cloned().collect::<Vec<_>>(), &[200, 201, 202, 203, 1, 100, 101]);
 }
 
-fn check_links<T>(_list: &LinkedList<T>) {
-    // would be good to do this!
+fn check_links<T: Eq + std::fmt::Debug>(list: &LinkedList<T>) {
+    let from_front: Vec<_> = list.iter().collect();
+    let from_back: Vec<_> = list.iter().rev().collect();
+    let re_reved: Vec<_> = from_back.into_iter().rev().collect();
+
+    assert_eq!(from_front, re_reved);
 }
 
