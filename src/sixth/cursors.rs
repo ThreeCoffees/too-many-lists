@@ -134,23 +134,23 @@ impl<'a, T> CursorMut<'a, T> {
                 // Current state
                 let old_len = self.list.len;
                 let old_idx = self.index.unwrap();
-                let prev = (*cur.as_ptr()).front;
+                let next = (*cur.as_ptr()).back;
 
                 // What self will become
-                let new_len = old_len - old_idx;
-                let new_front = self.cur;
-                let new_back = self.list.back;
-                let new_idx = Some(0);
+                let new_len = old_idx + 1;
+                let new_back = self.cur;
+                let new_front = self.list.front;
+                let new_idx = Some(old_idx);
 
                 // What the output will become
                 let output_len = old_len - new_len;
-                let output_front = self.list.front;
-                let output_back = prev;
+                let output_front = next;
+                let output_back = self.list.back;
 
                 // Break the links between cur and prev
-                if let Some(prev) = prev {
-                    (*cur.as_ptr()).front = None;
-                    (*prev.as_ptr()).back = None;
+                if let Some(next) = next {
+                    (*cur.as_ptr()).back = None;
+                    (*next.as_ptr()).front = None;
                 }
 
                 // Produce the results
@@ -168,6 +168,86 @@ impl<'a, T> CursorMut<'a, T> {
             }
         } else {
             std::mem::replace(self.list, LinkedList::new())
+        }
+    }
+
+    // Splice
+    pub fn splice_before(&mut self, mut input: LinkedList<T>) {
+        unsafe {
+            if input.is_empty(){
+                // Input is empty
+            } else if let Some(cur) = self.cur {
+                // Both lists are not empty
+                let in_front = input.front.take().unwrap();
+                let in_back = input.back.take().unwrap();
+
+                if let Some(prev) = (*cur.as_ptr()).front {
+                    // General case
+                    (*prev.as_ptr()).back = Some(in_front);
+                    (*in_front.as_ptr()).front = Some(prev);
+                    (*cur.as_ptr()).front = Some(in_back);
+                    (*in_back.as_ptr()).back = Some(cur);
+                } else {
+                    // Appending to the front
+                    (*cur.as_ptr()).front = Some(in_back);
+                    (*in_back.as_ptr()).back = Some(cur);
+                    self.list.front = Some(in_front);
+                }
+                // Index moves forward by input length
+                *self.index.as_mut().unwrap() += input.len;
+            } else if let Some(back) = self.list.back {
+                // Appending to back
+                let in_front = input.front.take().unwrap();
+                let in_back = input.back.take().unwrap();
+
+                (*back.as_ptr()).back = Some(in_front);
+                (*in_front.as_ptr()).front = Some(back);
+                self.list.back = Some(in_back);
+            } else {
+                // We're empty
+                std::mem::swap(self.list, &mut input);
+            }
+            self.list.len += input.len;
+            input.len = 0;
+        }
+    }
+
+    pub fn splice_after(&mut self, mut input: LinkedList<T>) {
+        unsafe {
+            if input.is_empty(){
+                // Input is empty
+            } else if let Some(cur) = self.cur {
+                // Both lists are not empty
+                let in_front = input.front.take().unwrap();
+                let in_back = input.back.take().unwrap();
+
+                if let Some(next) = (*cur.as_ptr()).back {
+                    // General case
+                    (*next.as_ptr()).front = Some(in_back);
+                    (*in_back.as_ptr()).back = Some(next);
+                    (*cur.as_ptr()).back = Some(in_front);
+                    (*in_front.as_ptr()).front = Some(cur);
+                } else {
+                    // Appending to the back
+                    (*cur.as_ptr()).back = Some(in_front);
+                    (*in_front.as_ptr()).front = Some(cur);
+                    self.list.back = Some(in_back);
+                }
+                // Index doesn't change
+            } else if let Some(front) = self.list.front {
+                // Appending to front
+                let in_front = input.front.take().unwrap();
+                let in_back = input.back.take().unwrap();
+
+                (*front.as_ptr()).front = Some(in_back);
+                (*in_back.as_ptr()).back = Some(front);
+                self.list.front = Some(in_front);
+            } else {
+                // We're empty
+                std::mem::swap(self.list, &mut input);
+            }
+            self.list.len += input.len;
+            input.len = 0;
         }
     }
 
